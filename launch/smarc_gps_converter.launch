@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Launch argument for robot namespace -->
+  <arg name="robot_name" default="" description="Robot namespace for GPS topics"/>
+  
+  <!-- SMARC GPS Converter Node -->
+  <node pkg="smarc_gps_converters" 
+        exec="smarc_gps_converter" 
+        name="smarc_gps_converter"
+        namespace="$(var robot_name)"
+        output="both">
+    
+    <!-- Remap GPS topics to match ublox GPS node output -->
+    <remap from="gps_fix" to="ublox_gps_node/fix"/>
+    <remap from="gps_fix_velocity" to="ublox_gps_node/fix_velocity"/>
+  </node>
+</launch>

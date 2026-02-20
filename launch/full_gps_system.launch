@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Launch argument for robot namespace -->
+  <arg name="robot_name" default="" description="Robot namespace for GPS topics (leave empty for no namespace)"/>
+  
+  <!-- Path to ublox GPS configuration file -->
+  <let name="config_file" value="$(find-pkg-share ublox_gps)/config/c94_m8p_rover.yaml"/>
+  
+  <!-- Launch the ublox GPS node with namespace -->
+  <group>
+    <push-ros-namespace namespace="$(var robot_name)"/>
+    <node pkg="ublox_gps" 
+          exec="ublox_gps_node" 
+          name="ublox_gps_node"
+          output="both">
+      <param from="$(var config_file)"/>
+    </node>
+  </group>
+  
+  <!-- Launch the SMARC GPS Converter Node -->
+  <group>
+    <push-ros-namespace namespace="$(var robot_name)"/>
+    <node pkg="smarc_gps_converters" 
+          exec="smarc_gps_converter" 
+          name="smarc_gps_converter"
+          output="both">
+      
+      <!-- Remap GPS topics to match ublox GPS node output -->
+      <remap from="gps_fix" to="gps_fix"/>
+      <remap from="gps_fix_velocity" to="gps_fix_velocity"/>
+    </node>
+  </group>
+</launch>
