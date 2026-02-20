@@ -1,5 +1,6 @@
 #! /bin/bash
-ROBOT_NAME=stick
+STICK_NUMBER=1 # Set to 1 or 2 to select NTRIP credentials
+ROBOT_NAME=stick_${STICK_NUMBER}
 SESSION=${ROBOT_NAME}_bringup
 USE_SIM_TIME=False
 
@@ -12,6 +13,18 @@ CONTEXT=waraps # change this to 'smarc' or something else
 TIMEOUT_THRESHOLD=0.5
 PING_COMMAND='$P111'
 TIMER_PERIOD=0.5
+
+# NTRIP credentials based on stick_number
+if [ "$STICK_NUMBER" = "1" ]; then
+    NTRIP_USERNAME=kth703
+    NTRIP_PASSWORD=7iTrPBzR3ik7BzdbvDkX
+elif [ "$STICK_NUMBER" = "2" ]; then
+    NTRIP_USERNAME=kth705
+    NTRIP_PASSWORD=UcH84ixejB3eCNEq9wV4
+else
+    echo "ERROR: Invalid STICK_NUMBER '$STICK_NUMBER'. Must be 1 or 2."
+    exit 1
+fi
 
 if [ "$USE_SIM_TIME" = "True" ]; then
     REALSIM=simulation
@@ -51,9 +64,14 @@ tmux new-window -t $SESSION:5 -n 'gps_to_modem_tf'
 tmux select-window -t $SESSION:5
 tmux send-keys "ros2 launch smarc_gps_converters gps_to_modem_tf.launch.py world_frame:=map gps_frame:=${ROBOT_NAME}_gps modem_frame:=${ROBOT_NAME}_modem z_offset:=-1.57 gps_topic:=smarc/latlon robot_name:=$ROBOT_NAME" C-m
 
-# Window 7: Empty window (rightmost)
-tmux new-window -t $SESSION:6 -n 'empty'
+# Window 7: NTRIP client
+tmux new-window -t $SESSION:6 -n 'ntrip_client'
 tmux select-window -t $SESSION:6
+tmux send-keys "ros2 launch ntrip_client ntrip_client_launch.py host:=20.185.11.35 port:=2101 mountpoint:=VRS_RTCM3 authenticate:=True username:=$NTRIP_USERNAME password:=$NTRIP_PASSWORD" C-m
+
+# Window 8: Empty window (rightmost)
+tmux new-window -t $SESSION:7 -n 'empty'
+tmux select-window -t $SESSION:7
 
 # Set default window to the acoustic modem window
 tmux select-window -t $SESSION:3
