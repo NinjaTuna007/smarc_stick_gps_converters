@@ -14,6 +14,11 @@ TIMEOUT_THRESHOLD=0.5
 PING_COMMAND='$P111'
 TIMER_PERIOD=0.5
 
+# NTRIP parameters
+NTRIP_HOST=nrtk-swepos.lm.se
+NTRIP_PORT=80
+NTRIP_MOUNTPOINT=MSM_GNSS
+
 # NTRIP credentials based on stick_number
 if [ "$STICK_NUMBER" = "1" ]; then
     NTRIP_USERNAME=kth703
@@ -50,9 +55,9 @@ tmux select-window -t $SESSION:2
 tmux send-keys "ros2 launch str_json_mqtt_bridge waraps_bridge.launch broker_addr:=20.240.40.232 broker_port:=1884 robot_name:=$ROBOT_NAME domain:=$AGENT_TYPE realsim:=$REALSIM use_sim_time:=$USE_SIM_TIME context:=$CONTEXT" C-m
 
 # Window 4: Acoustic modem (last window as requested)
-tmux new-window -t $SESSION:3 -n 'acoustic_modem'
+tmux new-window -t $SESSION:3 -n 'modem_microros'
 tmux select-window -t $SESSION:3
-tmux send-keys "ros2 launch serial_ping_pkg single_target_ping_node.launch timeout_threshold:=$TIMEOUT_THRESHOLD ping_command:=\\$PING_COMMAND timer_period:=$TIMER_PERIOD robot_name:=$ROBOT_NAME" C-m
+# tmux send-keys "ros2 launch micro_ros thingy" C-m
 
 # Window 5: smarc_gps_converter
 tmux new-window -t $SESSION:4 -n 'gps_converter'
@@ -67,11 +72,16 @@ tmux send-keys "ros2 launch smarc_gps_converters gps_to_modem_tf.launch.py world
 # Window 7: NTRIP client
 tmux new-window -t $SESSION:6 -n 'ntrip_client'
 tmux select-window -t $SESSION:6
-tmux send-keys "ros2 launch ntrip_client ntrip_client_launch.py host:=20.185.11.35 port:=2101 mountpoint:=VRS_RTCM3 authenticate:=True username:=$NTRIP_USERNAME password:=$NTRIP_PASSWORD" C-m
+tmux send-keys "ros2 launch ntrip_client ntrip_client_launch.py namespace:=$ROBOT_NAME host:=$NTRIP_HOST port:=$NTRIP_PORT mountpoint:=$NTRIP_MOUNTPOINT authenticate:=True username:=$NTRIP_USERNAME password:=$NTRIP_PASSWORD" C-m
 
-# Window 8: Empty window (rightmost)
-tmux new-window -t $SESSION:7 -n 'empty'
+# Window 8: PVPTU sound velocity sensor
+tmux new-window -t $SESSION:7 -n 'pvptu'
 tmux select-window -t $SESSION:7
+tmux send-keys "ros2 launch pvptu_driver pvptu_driver.launch.py robot_name:=$ROBOT_NAME" C-m
+
+# Window 9: Empty window (rightmost)
+tmux new-window -t $SESSION:8 -n 'empty'
+tmux select-window -t $SESSION:8
 
 # Set default window to the acoustic modem window
 tmux select-window -t $SESSION:3
