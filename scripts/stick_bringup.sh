@@ -17,10 +17,10 @@ TIMER_PERIOD=0.5
 # NTRIP credentials based on stick_number
 if [ "$STICK_NUMBER" = "1" ]; then
     NTRIP_USERNAME=kth703
-    NTRIP_PASSWORD=7iTrPBzR3ik7BzdbvDkX
+    NTRIP_PASSWORD=gotcha
 elif [ "$STICK_NUMBER" = "2" ]; then
     NTRIP_USERNAME=kth705
-    NTRIP_PASSWORD=UcH84ixejB3eCNEq9wV4
+    NTRIP_PASSWORD=nothappenin
 else
     echo "ERROR: Invalid STICK_NUMBER '$STICK_NUMBER'. Must be 1 or 2."
     exit 1
