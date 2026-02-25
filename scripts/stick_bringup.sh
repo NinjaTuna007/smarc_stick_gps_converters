@@ -57,7 +57,7 @@ tmux send-keys "ros2 launch str_json_mqtt_bridge waraps_bridge.launch broker_add
 # Window 4: Acoustic modem (last window as requested)
 tmux new-window -t $SESSION:3 -n 'modem_microros'
 tmux select-window -t $SESSION:3
-# tmux send-keys "ros2 launch micro_ros thingy" C-m
+tmux send-keys "ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyACM0" C-m
 
 # Window 5: smarc_gps_converter
 tmux new-window -t $SESSION:4 -n 'gps_converter'
