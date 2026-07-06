@@ -1,8 +1,15 @@
 #! /bin/bash
-STICK_NUMBER=1 # Set to 1 or 2 to select NTRIP credentials
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENV_FILE="${RTK_CREDENTIALS_FILE:-${SCRIPT_DIR}/../config/rtk_credentials.env}"
+
+# Stick identity: CLI arg > env var > default
+STICK_NUMBER="${1:-${STICK_NUMBER:-1}}"
 ROBOT_NAME=stick_${STICK_NUMBER}
 SESSION=${ROBOT_NAME}_bringup
 USE_SIM_TIME=False
+
+# u-blox GPS config file (looked up in ublox_gps/config)
+UBLOX_CONFIG=zed_x20p_rover.yaml
 
 # New variables for wasp_bt.launch and wasp_mqtt_agent.launch
 AGENT_TYPE=surface
@@ -14,22 +21,35 @@ TIMEOUT_THRESHOLD=0.5
 PING_COMMAND='$P111'
 TIMER_PERIOD=0.5
 
-# NTRIP parameters
-NTRIP_HOST=nrtk-swepos.lm.se
-NTRIP_PORT=80
-NTRIP_MOUNTPOINT=MSM_GNSS
-
-# NTRIP credentials based on stick_number
-if [ "$STICK_NUMBER" = "1" ]; then
-    NTRIP_USERNAME=kth703
-    NTRIP_PASSWORD=your_password_here
-elif [ "$STICK_NUMBER" = "2" ]; then
-    NTRIP_USERNAME=kth705
-    NTRIP_PASSWORD=your_password_here
-else
-    echo "ERROR: Invalid STICK_NUMBER '$STICK_NUMBER'. Must be 1 or 2."
+# Load RTK / NTRIP settings from env file
+if [ ! -f "$ENV_FILE" ]; then
+    echo "ERROR: RTK credentials file not found: $ENV_FILE"
+    echo "Copy config/rtk_credentials.env.example to config/rtk_credentials.env and fill in credentials."
     exit 1
 fi
+set -a
+# shellcheck source=/dev/null
+source "$ENV_FILE"
+set +a
+
+NTRIP_HOST="${NTRIP_HOST:-nrtk-swepos.lm.se}"
+NTRIP_PORT="${NTRIP_PORT:-80}"
+NTRIP_MOUNTPOINT="${NTRIP_MOUNTPOINT:-MSM_GNSS}"
+
+case "$STICK_NUMBER" in
+    1)
+        NTRIP_USERNAME="${NTRIP_USERNAME_1:?NTRIP_USERNAME_1 not set in $ENV_FILE}"
+        NTRIP_PASSWORD="${NTRIP_PASSWORD_1:?NTRIP_PASSWORD_1 not set in $ENV_FILE}"
+        ;;
+    2)
+        NTRIP_USERNAME="${NTRIP_USERNAME_2:?NTRIP_USERNAME_2 not set in $ENV_FILE}"
+        NTRIP_PASSWORD="${NTRIP_PASSWORD_2:?NTRIP_PASSWORD_2 not set in $ENV_FILE}"
+        ;;
+    *)
+        echo "ERROR: Invalid STICK_NUMBER '$STICK_NUMBER'. Must be 1 or 2."
+        exit 1
+        ;;
+esac
 
 if [ "$USE_SIM_TIME" = "True" ]; then
     REALSIM=simulation
@@ -42,7 +62,7 @@ fi
 # Window 1: GPS and basic sensors
 tmux -2 new-session -d -s $SESSION -n 'gps_sensors'
 tmux select-window -t $SESSION:0
-tmux send-keys "ros2 launch ublox_gps ublox_gps_namespace.launch robot_name:=$ROBOT_NAME" C-m
+tmux send-keys "ros2 launch ublox_gps ublox_gps_namespace.launch robot_name:=$ROBOT_NAME config_file:=$UBLOX_CONFIG" C-m
 
 # Window 2: WARAPS agent (Level 1)
 tmux new-window -t $SESSION:1 -n 'waraps_agent'
