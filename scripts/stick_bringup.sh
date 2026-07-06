@@ -8,8 +8,8 @@ ROBOT_NAME=stick_${STICK_NUMBER}
 SESSION=${ROBOT_NAME}_bringup
 USE_SIM_TIME=False
 
-# u-blox GPS config file (looked up in ublox_gps/config)
-UBLOX_CONFIG=zed_x20p_rover.yaml
+# u-blox GPS config file (looked up in ublox_gps/config); override with UBLOX_CONFIG env var
+UBLOX_CONFIG="${UBLOX_CONFIG:-zed_x20p_rover.yaml}"
 
 # New variables for wasp_bt.launch and wasp_mqtt_agent.launch
 AGENT_TYPE=surface
